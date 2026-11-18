@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="03-create-meetings-and-sessions" author="optronix">
+        <!-- Meetings Table -->
+        <createTable tableName="meetings">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_meeting_customer" references="customers(id)"/>
+            </column>
+            <column name="assigned_employee_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_meeting_employee" references="users(id)"/>
+            </column>
+            <column name="purpose" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_start_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_end_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meeting_location" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="CLOB"/>
+            <column name="status" type="VARCHAR(30)" defaultValue="SCHEDULED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcome" type="VARCHAR(40)"/>
+            <column name="outcome_notes" type="CLOB"/>
+            <column name="reopened_count" type="INT" defaultValueNumeric="0"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <!-- Meeting Visit Sessions (Solves Open-Ended Design Scenario) -->
+        <createTable tableName="meeting_sessions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="meeting_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_session_meeting" references="meetings(id)"/>
+            </column>
+            <column name="session_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="check_in_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="check_in_latitude" type="DOUBLE"/>
+            <column name="check_in_longitude" type="DOUBLE"/>
+            <column name="check_in_location_name" type="VARCHAR(255)"/>
+            <column name="check_out_time" type="TIMESTAMP"/>
+            <column name="check_out_latitude" type="DOUBLE"/>
+            <column name="check_out_longitude" type="DOUBLE"/>
+            <column name="check_out_location_name" type="VARCHAR(255)"/>
+            <column name="session_notes" type="VARCHAR(500)"/>
+        </createTable>
+
+        <!-- Follow-Ups Table (Mandatory when outcome is FOLLOW_UP_REQUIRED) -->
+        <createTable tableName="follow_ups">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="meeting_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_followup_meeting" references="meetings(id)"/>
+            </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_followup_owner" references="users(id)"/>
+            </column>
+            <column name="action_item" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="due_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="CLOB"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Meeting Audit Logs (Manager Reopening & Significant Events) -->
+        <createTable tableName="meeting_audit_logs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="meeting_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_audit_meeting" references="meetings(id)"/>
+            </column>
+            <column name="performed_by_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_audit_user" references="users(id)"/>
+            </column>
+            <column name="action" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="previous_status" type="VARCHAR(30)"/>
+            <column name="new_status" type="VARCHAR(30)"/>
+            <column name="reason" type="VARCHAR(500)"/>
+            <column name="timestamp" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
