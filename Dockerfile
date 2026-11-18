@@ -1,0 +1,15 @@
+# Build stage
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY backend/pom.xml .
+COPY backend/src ./src
+RUN mvn clean package -DskipTests
+
+# Run stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 7860
+EXPOSE 8080
+ENV PORT=7860
+ENTRYPOINT ["java", "-jar", "app.jar"]
