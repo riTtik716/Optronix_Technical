@@ -1,4 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const CLOUDFLARE_BACKEND = 'https://luxury-spouse-pod-cafe.trycloudflare.com/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || (isLocalhost ? 'http://localhost:8080/api' : CLOUDFLARE_BACKEND);
 
 class ApiService {
   getAccessToken() {
