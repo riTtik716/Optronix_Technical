@@ -245,6 +245,16 @@ export function CheckInModal({
           </div>
 
           <div className="form-group">
+            <label className="form-label">Check-in Location / Venue Name</label>
+            <input 
+              name="locationName" 
+              className="form-input" 
+              placeholder="e.g. Client Office, Tower B, Gurugram" 
+              defaultValue={meeting.targetLocation || (meeting.customerName ? `${meeting.customerName} Office` : 'Client Office')} 
+            />
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Check-in Notes</label>
             <input name="notes" className="form-input" placeholder="e.g. Arrived on-site at client reception" defaultValue="Arrived on-site at customer office" />
           </div>

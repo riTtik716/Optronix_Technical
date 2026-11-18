@@ -201,6 +201,7 @@ export default function App() {
       await api.checkIn(showCheckInModal.id, {
         latitude: Number(form.latitude.value),
         longitude: Number(form.longitude.value),
+        locationName: form.locationName ? form.locationName.value : (showCheckInModal.targetLocation || 'On-site Office'),
         notes: form.notes.value
       });
       setShowCheckInModal(null);
