@@ -1,135 +1,182 @@
 # Optronix Sales Meeting & Field Visit Management System
-## 🎯 Complete Project Explanation & Interview Guide (प्रोजेक्ट गाइड)
+## 🎯 Comprehensive Project Explanation & Technical Interview Guide
 
-> **उद्देश्य:** इस गाइड का उपयोग आप इंटरव्यूअर को पूरा प्रोजेक्ट शुरू से अंत तक आसानी से और तकनीकी गहराई (Technical Depth) के साथ समझाने के लिए कर सकते हैं। इसमें प्रोजेक्ट का आर्किटेक्चर, रियल-टाइम फीचर्स, डेटाबेस मॉडलिंग और संभावित इंटरव्यू प्रश्न-उत्तर शामिल हैं।
-
----
-
-## 📌 1. 30-Second Elevator Pitch (प्रोजेक्ट क्या है?)
-
-> **"Optronix एक Enterprise Full-Stack Sales Meeting & Visit Management Platform है।**  
-> यह फील्ड सेल्स एग्जीक्यूटिव्स की ऑन-साइट क्लाइंट मीटिंग्स, रियल-टाइम GPS जियोलोकेशन चेक-इन, मल्टी-सेशन विज़िट्स (जैसे लंच ब्रेक या री-विज़िट), और ऑटोमेटेड फॉलो-अप्स को मैनेज करता है।  
-> इसमें **Spring Boot (Java 21)**, **React 18 + Vite**, **JWT Authentication (Role-Based Access Control)**, और **Liquibase Migrations** का उपयोग किया गया है।"
+> **Purpose:** This document is designed to give you a complete, clear, and professional walkthrough of the entire project in plain English. Use this guide to understand the system architecture, real-world business logic, database design, and to answer any interview questions with confidence.
 
 ---
 
-## 🏗️ 2. Core Architecture & Tech Stack (तकनीकी ढांचा)
+## 📌 1. Executive Summary (The 30-Second Elevator Pitch)
 
-### Backend (Spring Boot 3.x / Java 21)
-* **Modular Monolith Architecture:** कोडबेस 5 अलग-अलग डोमेन मॉड्यूल्स में बंटा हुआ है:
-  1. `auth` - JWT टोकन जनरेशन, रिफ्रेश टोकन रोटेशन, पासवर्ड एन्क्रिप्शन (BCrypt)।
-  2. `customer` - क्लाइंट प्रोफाइल, कॉन्टैक्ट डिटेल्स, ऑफिस एड्रेस।
-  3. `meeting` - स्टेट मशीन, 1:N सेशन्स, GPS चेक-इन/चेक-आउट, आउटकम रिकॉर्डिंग।
-  4. `followup` - ऑटोमेटेड टास्क क्रिएशन, ड्यू डेट्स, टास्क कम्प्लीशन।
-  5. `audit` & `useractivity` - इम्यूटेबल (अपरिवर्तनीय) ऑडिट ट्रेल और लॉगिन हिस्ट्री।
-* **Database & Migration:** Liquibase (Version-controlled database changes) + Spring Data JPA + H2 / PostgreSQL compatible schema.
-
-### Frontend (React 18 + Vite)
-* **SPA (Single Page Application):** मॉडर्न, रिस्पॉन्सिव डिज़ाइन सिस्टम।
-* **Hardware API Integration:** HTML5 Geolocation API (`navigator.geolocation`) का उपयोग करके लाइव डिवाइस GPS कोऑर्डिनेट्स कैप्चर करना।
-* **Dynamic Role Switcher:** सेल्स रिप्रेजेंटेटिव, मैनेजर, और एडमिन के बीच 1-क्लिक प्रीसेट लॉगिन।
+> **"Optronix is a full-stack, enterprise-grade Sales Meeting and Field Visit Management platform.**  
+> It solves the core problem of tracking sales representatives on the field, verifying their physical presence through **real-time hardware GPS geolocation**, handling real-world visit interruptions via **1-to-many (1:N) visit sessions**, and enforcing **mandatory follow-up workflows** for sales pipeline integrity.  
+> The system is built with **Spring Boot 3 (Java 21)**, **React 18 + Vite**, **Stateless JWT Authentication with Role-Based Access Control (RBAC)**, and **Liquibase version-controlled database migrations**."
 
 ---
 
-## 🔄 3. End-to-End Workflow (प्रोजेक्ट कैसे काम करता है?)
+## 🏗️ 2. Core Architecture & Tech Stack
+
+### Backend: Spring Boot 3.x (Java 21)
+* **Modular Monolith Pattern:** Organized into isolated, high-cohesion domain modules:
+  1. `auth` — JWT access/refresh token generation, token rotation, BCrypt password hashing, and role checks.
+  2. `customer` — Client profiles, contact persons, corporate addresses, and industry segments.
+  3. `meeting` — Meeting state machine, session tracking, GPS check-in/out coordinates, and outcome logging.
+  4. `followup` — Automated post-meeting task generation, ownership assignment, and completion tracking.
+  5. `audit` & `useractivity` — Immutable compliance audit logs and user session telemetry (login/logout).
+* **Database & Migrations:** 
+  - Version-controlled incremental schema evolution using **Liquibase XML changelogs**.
+  - Production-ready Spring Data JPA entities with relational integrity, cascading rules, and optimized fetch strategies.
+  - Compatible with H2 (development) and PostgreSQL / MySQL (production).
+
+### Frontend: React 18 + Vite
+* **Single Page Application (SPA):** High-speed, responsive component hierarchy.
+* **Native Hardware Geolocation:** Uses HTML5 Geolocation API (`navigator.geolocation.getCurrentPosition`) to fetch high-precision device GPS coordinates directly from the user's hardware.
+* **Multi-Role Workspace:** Dynamic UI adapts instantly depending on whether the logged-in user is a **Sales Representative**, **Sales Manager**, or **System Administrator**.
+
+---
+
+## 🔄 3. End-to-End Workflow & Business Logic
 
 ```mermaid
 flowchart TD
-    A["1. Login (JWT Role Check)"] --> B["2. Customer Selection / Add"]
+    A["1. User Authentication (JWT + Role)"] --> B["2. Client Selection / Creation"]
     B --> C["3. Schedule Meeting (Target Location Set)"]
     C --> D["4. Confirm Meeting (Sales Rep Assigned)"]
-    D --> E["5. On-Site Check-In (Live GPS Lat/Lng Captured)"]
-    E --> F["6. In Progress (Meeting Underway)"]
-    F -->|Interruption / Lunch| G["Pause Meeting (End Session 1)"]
-    G -->|Resume Visit| H["Resume Check-In (Start Session 2 with GPS)"]
+    D --> E["5. On-Site Check-In (Hardware GPS Lat/Lng Captured)"]
+    E --> F["6. In-Progress Meeting"]
+    F -->|Client Lunch / Interruption| G["Pause Meeting (Session 1 Ended)"]
+    G -->|Visit Resumed| H["Resume Meeting (Session 2 Started with New GPS)"]
     H --> F
-    F --> I["7. Complete Meeting (Record Outcome)"]
-    I -->|Outcome: Follow-up Needed| J["Auto-create Mandatory Follow-Up Task"]
-    I -->|Outcome: Closed / Proposal| K["Calculate Total Duration & Save Logs"]
-    K -->|If Needed by Manager| L["Manager Reopens Meeting (Reason Required)"]
+    F --> I["7. Complete Meeting (Outcome Logged)"]
+    I -->|Outcome: Follow-up Needed| J["Mandatory Follow-Up Task Created Automatically"]
+    I -->|Outcome: Closed / Proposal| K["Compute Total Duration & Seal Audit Trail"]
+    K -->|If Dispute / Correction| L["Manager Reopens Meeting (Mandatory Reason Required)"]
 ```
 
-### चरण 1: रोल-बेस्ड ऑथेंटिकेशन (3 Roles)
-* **Sales Representative (`ROLE_SALES_EMPLOYEE`):** केवल अपनी खुद की असाइन्ड मीटिंग्स, अपनी फील्ड विज़िट्स का चेक-इन, और अपने फॉलो-अप टास्क देखता है।
-* **Sales Manager (`ROLE_SALES_MANAGER`):** पूरी टीम की मीटिंग्स की प्रोग्रेस, लाइव विज़िट्स, परफॉरमेंस एनालिटिक्स और कम्प्लीट मीटिंग्स को री-ओपन (Reopen) करने का अधिकार रखता है।
-* **System Admin (`ROLE_ADMIN`):** नए यूजर्स बनाना, पासवर्ड रीसेट, कंपनी-वाइड मीटिंग्स, और सभी यूजर्स के लॉगिन/लॉगआउट टाइमस्टैम्प्स देखना।
+### Step 1: Role-Based Access Control (3 Discrete Roles)
+1. **Sales Representative (`ROLE_SALES_EMPLOYEE`):**
+   - Access is restricted exclusively to meetings assigned to them.
+   - Can check in with live GPS, record visit notes, pause/resume sessions, log meeting outcomes, and complete follow-up tasks.
+2. **Sales Manager (`ROLE_SALES_MANAGER`):**
+   - Team-wide oversight: views all field visits across all sales reps.
+   - Access to team analytics, live active GPS sessions, and audit histories.
+   - **Exclusive Privilege:** Has the authorization to reopen a completed meeting if additional customer discussions are required.
+3. **System Administrator (`ROLE_ADMIN`):**
+   - System governance: user account provisioning, role assignment, credential resets.
+   - Security auditing: views user login/logout timestamps and IP records.
 
-### चरण 2: मीटिंग शेड्यूलिंग (Target Location)
-* जब मीटिंग शेड्यूल की जाती है, तो **Target Location / Client Address** सेट होता है (जैसे: *Cyber City, Tower B, Gurugram*)। 
-* यह वह प्लांड लोकेशन है जहाँ सेल्सपर्सन को जाना है।
+---
 
-### चरण 3: लाइव GPS चेक-इन (Live On-Site Verification)
-* जब सेल्सपर्सन क्लाइंट साइट पर पहुँचता है, तो वह **"Check In (GPS)"** पर क्लिक करता है।
-* ब्राउज़र का **HTML5 Geolocation API** उसके फोन/लैपटॉप के हार्डवेयर GPS से लाइव `Latitude` और `Longitude` कैप्चर करता है।
-* साथ ही `Location Name` और `Notes` भी दर्ज होते हैं।
-* बैकएंड इसे `MEETING_SESSIONS` टेबल में टाइमस्टैम्प के साथ सुरक्षित करता है।
+### Step 2: Scheduling & Planning (Target Location)
+* When a manager or sales rep schedules a meeting, they specify the **Target Location** (e.g., *Acme Corp HQ, Cyber City, Tower B, Gurugram*).
+* This defines the planned destination where the physical meeting is supposed to happen.
 
-### चरण 4: मल्टी-सेशन विज़िट मॉडलिंग (1:N Relationship) - *Unique Feature*
-* **रियल-वर्ल्ड समस्या:** एक फील्ड विज़िट हमेशा लगातार 1 घंटे में खत्म नहीं होती। मान लीजिए क्लाइंट लंच ब्रेक पर चला गया, या सेल्सपर्सन अगले दिन दोबारा डॉक्यूमेंट साइन कराने गया।
-* **हमारा समाधान:** हमने `Meeting` और `MeetingSession` के बीच **1-to-Many (1:N)** रिलेशनशिप बनाई है:
-  - पहली विज़िट = Session 1 (चेक-इन टाइम, चेक-इन GPS, चेक-आउट टाइम, चेक-आउट GPS, अवधि)।
-  - दूसरी विज़िट = Session 2 (नया चेक-इन GPS, नई अवधि)।
-  - सिस्टम दोनों सेशन्स की कुल अवधि जोड़कर मीटिंग की **`totalDurationMinutes`** निकालता है।
+---
 
-### चरण 5: मीटिंग आउटकम और मैंडेटरी फॉलो-अप
-* मीटिंग खत्म करते समय सेल्सपर्सन 5 में से 1 आउटकम चुनता है:
+### Step 3: Real-Time On-Site GPS Check-In
+* When the salesperson arrives at the client's office, they open the meeting and click **"Check In (GPS)"**.
+* The application invokes `navigator.geolocation.getCurrentPosition()`:
+  - Fetches real-time `Latitude` and `Longitude` from the device hardware.
+  - Automatically populates the `Check-in Location / Venue Name` (defaults to client office, editable if venue changed).
+  - Accepts check-in operational notes (e.g., *"Arrived at 4th floor reception"*).
+* The backend API `POST /api/meetings/{id}/check-in` creates a new record in `MEETING_SESSIONS` with the exact server timestamp and hardware coordinates.
+* **Why this matters:** The manager can compare the scheduled target address with the actual GPS coordinates to verify physical presence and eliminate fake check-ins.
+
+---
+
+### Step 4: Multi-Session Tracking (1:N Sessions) — *Key Architectural Decision*
+* **The Problem:** In field sales, meetings rarely happen in one unbroken block. A client might take an urgent phone call, step out for lunch, or ask the sales rep to return the next morning.
+* **Our Solution:** A `Meeting` can have **multiple `MeetingSession` records (1:N)**:
+  - **First visit:** Session #1 begins with GPS coordinates; paused when client steps out.
+  - **Second visit:** Session #2 begins with fresh GPS coordinates when the meeting resumes.
+  - **Accurate Duration:** The system calculates the exact working duration of each session independently and aggregates them into `totalDurationMinutes`.
+  - **No Duplicate Data:** The salesperson does not need to create confusing duplicate meeting tickets for the same deal.
+
+---
+
+### Step 5: Meeting Outcomes & Enforced Follow-Ups
+* When closing a meeting, the sales rep must select 1 of 5 standard business outcomes:
   1. `INTERESTED`
   2. `FOLLOW_UP_REQUIRED`
   3. `PROPOSAL_REQUESTED`
   4. `NOT_INTERESTED`
   5. `UNABLE_TO_MEET`
-* **बिजनेस रूल इन्फोर्समेंट:** यदि आउटकम `FOLLOW_UP_REQUIRED` है, तो सिस्टम बिना **Action Item** और **Due Date** भरे फॉर्म सबमिट नहीं होने देता। यह डेटा सीधे `FOLLOW_UPS` टेबल में चला जाता है।
-
-### चरण 6: पूर्ण ऑडिट ट्रेल (Audit Trail)
-* हर एक एक्शन (CONFIRM, CHECK_IN, PAUSE, RESUME, COMPLETE, REOPEN) का एक इम्यूटेबल रिकॉर्ड `MEETING_AUDIT_LOGS` टेबल में बनता है।
-* इसमें किसने एक्शन लिया, किस टाइम पर लिया, पुराना स्टेटस क्या था और नया स्टेटस क्या बना—सब कुछ रिकॉर्ड होता है।
+* **Enforced Business Constraint:** If the outcome is `FOLLOW_UP_REQUIRED` or `PROPOSAL_REQUESTED`, the UI and backend strictly enforce that an **Action Item** and a **Due Date** are provided. The system automatically inserts a linked task into the `FOLLOW_UPS` table so leads never fall through the cracks.
 
 ---
 
-## 🗄️ 4. Database Schema (Entities & Relationships)
+### Step 6: Immutable Compliance & Audit Trail
+* Every status transition (`SCHEDULED` ➔ `CONFIRMED` ➔ `CHECKED_IN` ➔ `IN_PROGRESS` ➔ `PAUSED` ➔ `COMPLETED` ➔ `REOPENED`) writes a permanent row into `MEETING_AUDIT_LOGS`.
+* Each audit entry captures:
+  - `action`: Type of action performed
+  - `from_status` & `to_status`: The state transition
+  - `performed_by`: Full name and email of the user
+  - `timestamp`: Exact UTC/local time
+  - `remarks`: Contextual reason (e.g., manager reason for reopening)
 
-| Entity Name | Description | Key Fields |
+---
+
+## 🗄️ 4. Database Schema & Data Model
+
+| Table Name | Primary Purpose | Critical Columns |
 | :--- | :--- | :--- |
-| **`USERS`** | सिस्टम यूजर्स और उनकी भूमिकाएं | `id`, `email`, `role`, `is_active` |
-| **`CUSTOMERS`** | क्लाइंट प्रोफाइल्स | `company_name`, `contact_name`, `address` |
-| **`MEETINGS`** | मुख्य मीटिंग रिकॉर्ड | `status`, `target_location`, `outcome`, `total_duration_minutes` |
-| **`MEETING_SESSIONS`** | हर विज़िट का GPS व टाइम सेशन (1:N) | `check_in_time`, `check_in_latitude`, `check_in_longitude`, `check_in_location_name`, `check_out_time` |
-| **`FOLLOW_UPS`** | मीटिंग से जुड़े पोस्ट-मीटिंग टास्क | `action_item`, `due_date`, `status` (`PENDING`/`COMPLETED`) |
-| **`MEETING_AUDIT_LOGS`**| जीवनचक्र बदलावों का ऑडिट ट्रेल | `action`, `previous_status`, `new_status`, `timestamp`, `performed_by` |
-| **`USER_ACTIVITY_LOGS`**| सुरक्षा और लॉगिन हिस्ट्री | `user_id`, `action` (`LOGIN`/`LOGOUT`), `timestamp`, `ip_address` |
+| **`USERS`** | System credentials and roles | `id`, `email`, `password_hash`, `role`, `is_active` |
+| **`REFRESH_TOKENS`** | Secure session management & rotation | `token`, `user_id`, `expiry_date`, `revoked` |
+| **`CUSTOMERS`** | Client directory & accounts | `company_name`, `contact_name`, `email`, `address`, `industry` |
+| **`MEETINGS`** | Master meeting entity | `customer_id`, `assigned_user_id`, `status`, `target_location`, `outcome`, `total_duration_minutes` |
+| **`MEETING_SESSIONS`** | 1:N visit sessions with GPS | `meeting_id`, `session_number`, `check_in_time`, `check_in_latitude`, `check_in_longitude`, `check_in_location_name`, `check_out_time`, `session_notes` |
+| **`FOLLOW_UPS`** | Action items created from meetings | `meeting_id`, `assigned_to`, `action_item`, `due_date`, `status` (`PENDING`/`COMPLETED`) |
+| **`MEETING_AUDIT_LOGS`** | Tamper-proof audit history | `meeting_id`, `action`, `previous_status`, `new_status`, `performed_by_id`, `timestamp`, `details` |
+| **`USER_ACTIVITY_LOGS`** | Login and security tracking | `user_id`, `action` (`LOGIN`/`LOGOUT`), `timestamp`, `ip_address` |
 
 ---
 
-## 💬 5. Interview Questions & Ready Answers (इंटरव्यू में क्या बोलें?)
+## 💡 5. Common Interview Questions & How to Answer Them
 
-### Q1: "क्या सेल्सपर्सन कहीं से भी मीटिंग स्टार्ट कर सकता है या सिर्फ एग्जैक्ट लोकेशन से?"
-> **जवाब:** "मीटिंग शेड्यूल करते समय टारगेट लोकेशन (जैसे क्लाइंट ऑफिस) तय होती है। जब सेल्सपर्सन मीटिंग स्टार्ट करता है, तो सिस्टम उसके डिवाइस के **HTML5 Geolocation API** से लाइव GPS कोऑर्डिनेट्स (Lat/Lng) और टाइमस्टैम्प कैप्चर करके डेटाबेस में सेव करता है।  
-> हमने हार्ड जियो-फेंसिंग (Hard Geofencing) से सेल्सपर्सन को ब्लॉक नहीं किया, क्योंकि रियल वर्ल्ड में क्लाइंट अक्सर पास के कैफे या दूसरे ब्लॉक में मीटिंग शिफ्ट कर देता है। लेकिन दोनों लोकेशन्स का अंतर और कोऑर्डिनेट्स ऑडिट लॉग में परमानेंटली सेव हो जाते हैं, जिससे मैनेजर इसे 100% वेरीफाई कर सकता है।"
-
-### Q2: "आपने 1:1 के बजाय 1:N (Multi-Session) आर्किटेक्चर क्यों चुना?"
-> **जवाब:** "अगर हम 1:1 (एक मीटिंग = एक चेक-इन/चेक-आउट) रखते, तो बीच में ब्रेक होने पर या क्लाइंट द्वारा अगले दिन दोबारा बुलाने पर सिस्टम फेल हो जाता या सेल्सपर्सन को फर्जी नई मीटिंग बनानी पड़ती। 1:N सेशन मॉडलिंग से एक ही मीटिंग टिकट के अंदर मल्टीपल ऑन-साइट विज़िट्स और उनकी सही कुल अवधि (Total Duration) बिना डेटा डुप्लीकेशन के ट्रैक हो जाती है।"
-
-### Q3: "प्रोजेक्ट में सिक्योरिटी कैसे लागू की गई है?"
-> **जवाब:** "हमने **Stateless JWT Authentication** लागू किया है। इसमें शॉर्ट-लिव्ड एक्सेस टोकन (15 मिनट) और डेटाबेस-रिफ्रेश टोकन रोटेशन है। बैकएंड में Spring Security के मेथड-लेवल `@PreAuthorize` एनोटेशन से सुनिश्चित किया गया है कि सेल्सपर्सन किसी दूसरे कर्मचारी का डेटा न देख सके और केवल मैनेजर ही मीटिंग री-ओपन कर सके।"
-
-### Q4: "डेटाबेस माइग्रेशन के लिए Liquibase क्यों इस्तेमाल किया?"
-> **जवाब:** "प्रोडक्शन एनवायरनमेंट में `ddl-auto: update` खतरनाक होता है। Liquibase के XML चेंजलॉग्स के जरिए डेटाबेस स्कीमा का हर बदलाव गिट की तरह वर्ज़न-कंट्रोल्ड (Version-Controlled) रहता है, जिससे बिना डेटा लॉस के रोलबैक या अपडेट सुरक्षित तरीके से किया जा सकता है।"
-
-### Q5: "भविष्य में इस सिस्टम को 1 लाख सेल्सपर्सन के लिए कैसे स्केल करेंगे?"
-> **जवाब:** 
-> 1. **PostGIS Integration:** GPS कोऑर्डिनेट्स के लिए PostgreSQL के PostGIS एक्सटेंशन से स्पेशल इंडेक्सिंग और ऑटोमेटेड जियो-फेंसिंग।
-> 2. **Redis Caching:** एक्टिव मीटिंग्स और सेशन काउंट्स को इन-मेमोरी कैश करना ताकि डेटाबेस पर रीड लोड कम हो।
-> 3. **Kafka Event Streaming:** ऑडिट लॉग्स और यूजर एक्टिविटी लॉग्स को एसिंक्रोनस (Asynchronous) इवेंट्स के रूप में प्रोसेस करना।
+### Question 1: "Does the meeting start only from the exact target location, or can a sales person start it from anywhere?"
+> **Answer:**  
+> "When scheduling a meeting, a **Target Location** (e.g., the client's corporate office) is recorded as the expected destination. When the sales representative clicks Check-In, the system queries the device's **HTML5 Geolocation API** to capture their **live hardware GPS Latitude and Longitude** along with the timestamp.  
+> We deliberately chose **not to implement hard geofencing blocks** because in real-world sales, clients frequently move meetings to an adjacent cafeteria or nearby branch. Instead, the system records the exact physical GPS coordinates and venue name into the audit log, enabling managers to verify whether the check-in occurred at the client site or elsewhere."
 
 ---
 
-## 🚀 6. Demo Credentials (डेमो के लिए खाते)
-
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Sales Representative** | `employee@optronix.com` | `password123` |
-| **Sales Manager** | `manager@optronix.com` | `password123` |
-| **System Admin** | `admin@optronix.com` | `password123` |
+### Question 2: "Why did you design a 1-to-Many (1:N) Meeting Session model instead of 1-to-1?"
+> **Answer:**  
+> "A traditional 1-to-1 relationship (one check-in and one check-out per meeting) breaks down when real-life interruptions occur—such as when a client pauses for lunch, or asks the rep to return the next morning with contracts.  
+> With our 1:N session architecture, a single meeting ticket can hold multiple discrete physical visits. Each session preserves its own check-in/out time and GPS coordinates. The system sums the active durations into a single accurate total without forcing reps to create fake duplicate meetings."
 
 ---
-*Created for Optronix Sales Visit & Meeting Management Interview Assignment.*
+
+### Question 3: "How is application security implemented?"
+> **Answer:**  
+> "Security is built on **stateless Spring Security with JWT**.  
+> 1. Authentication generates a short-lived Access Token (15 minutes) and a persistent Refresh Token stored in the database.  
+> 2. We implement **Refresh Token Rotation**: whenever an access token is refreshed, the old refresh token is invalidated to prevent replay attacks.  
+> 3. Authorization uses method-level `@PreAuthorize` guards so that sales reps can strictly only access their own assigned records, while managerial operations (such as reopening a meeting) are restricted by role."
+
+---
+
+### Question 4: "Why use Liquibase instead of `ddl-auto: update`?"
+> **Answer:**  
+> "`ddl-auto: update` is unsafe for production environments because it can cause unintended data corruption, cannot handle column renames safely, and offers no rollback strategy. Liquibase provides version-controlled, reproducible XML changelogs that track every database migration step, ensuring schema parity across development, staging, and production."
+
+---
+
+### Question 5: "How would you scale this architecture for 100,000 active sales reps?"
+> **Answer:**  
+> "I would evolve the architecture across three layers:  
+> 1. **Spatial Queries:** Migrate the GPS columns to **PostgreSQL with PostGIS** (`GEOMETRY(Point, 4326)`) and apply spatial indexing (`GIST`) to execute sub-millisecond geofence and proximity queries.  
+> 2. **Caching:** Introduce **Redis** to cache user permissions and active session metadata, drastically reducing relational database reads.  
+> 3. **Asynchronous Telemetry:** Route high-frequency audit logs and GPS tracking pings through an **Apache Kafka** event stream to decouple writes from transactional meeting operations."
+
+---
+
+## 🔑 6. Demo Accounts (For Live Evaluation)
+
+| Role | Email | Password | Scope of Access |
+| :--- | :--- | :--- | :--- |
+| **Sales Representative** | `employee@optronix.com` | `password123` | Personal assigned meetings, GPS check-in, personal follow-ups |
+| **Sales Manager** | `manager@optronix.com` | `password123` | Team-wide dashboard, reopening completed meetings, team analytics |
+| **System Administrator** | `admin@optronix.com` | `password123` | User provisioning, audit trails, login telemetry |
+
+---
+*Created for the Optronix Sales Meeting & Visit Management System.*
